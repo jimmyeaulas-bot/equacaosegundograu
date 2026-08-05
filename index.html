@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equações do 2º Grau · Simulação Interativa</title>
+    
+    <!-- KaTeX CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    
+    <style>
+        /* =========================================================
+           Variáveis CSS - Identidade Visual (Tema Verde)
+           ========================================================= */
+        :root {
+            --color-primary: #16a34a;
+            --color-primary-dark: #15803d;
+            --color-primary-light: #dcfce7;
+            --color-bg: #ffffff;
+            --color-surface: #f0fdf4;
+            --color-text: #14532d;
+            --color-text-muted: #3f6212;
+            --color-border: #86efac;
+            --color-error: #166534;
+            --color-error-bg: #bbf7d0;
+            --color-success: #15803d;
+            --font-base: 16px;
+            --radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.1), 0 2px 4px -1px rgba(22, 163, 74, 0.06);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            font-size: var(--font-base);
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { animation: none !important; transition: none !important; }
+        }
+
+        .sr-only {
+            position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+        }
+
+        /* =========================================================
+           Layout
+           ========================================================= */
+        header {
+            background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+            color: white;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        header h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+        header p { opacity: 0.9; font-size: 0.95rem; }
+
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        section {
+            background-color: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        h2 {
+            color: var(--color-primary-dark);
+            border-bottom: 2px solid var(--color-border);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+
+        h3 { color: var(--color-text); margin: 1.5rem 0 0.5rem; font-size: 1.1rem; }
+        p { margin-bottom: 1rem; }
+
+        /* =========================================================
+           Componentes: Metodologia dos 3 Pilares
+           ========================================================= */
+        .pillars-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .pillar-card {
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .pillar-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+            border-color: var(--color-primary);
+        }
+
+        .pillar-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: bold;
+            color: var(--color-primary-dark);
+            margin-bottom: 0.75rem;
+            font-size: 1.05rem;
+        }
+
+        .math-block {
+            background: var(--color-primary-light);
+            padding: 0.75rem;
+            border-radius: 6px;
+            text-align: center;
+            margin: 0.75rem 0;
+            overflow-x: auto;
+        }
+
+        /* =========================================================
+           Simulação (Canvas e Controles)
+           ========================================================= */
+        .sim-container {
+            background: var(--color-bg);
+            border: 2px solid var(--color-border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .sim-header {
+            background: var(--color-primary-light);
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .sim-badge {
+            background: var(--color-primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        canvas#grafico-parabola {
+            width: 100%;
+            height: 350px;
+            display: block;
+            background: #ffffff;
+        }
+
+        .sim-controls {
+            padding: 1rem;
+            background: var(--color-surface);
+            border-top: 1px solid var(--color-border);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]:focus { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 22px; width: 22px; border-radius: 50%;
+            background: var(--color-primary); cursor: pointer;
+            margin-top: -9px; border: 3px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 6px; cursor: pointer;
+            background: var(--color-border); border-radius: 3px;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 1.1rem;
+            color: var(--color-primary-dark);
+            font-weight: bold;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .btn {
+            background-color: var(--color-primary);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn:hover { background-color: var(--color-primary-dark); }
+        .btn:active { transform: scale(0.98); }
+        .btn:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+
+        /* =========================================================
+           Quiz
+           ========================================================= */
+        .quiz-item {
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .quiz-item fieldset { border: none; margin-top: 0.75rem; }
+        .quiz-item legend { font-weight: 600; margin-bottom: 0.5rem; color: var(--color-text); }
+        .option {
+            display: flex; align-items: center; gap: 0.5rem;
+            margin-bottom: 0.5rem; padding: 0.5rem;
+            border-radius: 4px; transition: background 0.2s;
+        }
+        .option:hover { background: var(--color-primary-light); }
+        .option input[type="radio"] {
+            width: 1.2rem; height: 1.2rem;
+            accent-color: var(--color-primary); cursor: pointer;
+        }
+        .option label { cursor: pointer; flex: 1; }
+
+        .feedback {
+            margin-top: 0.75rem; padding: 0.75rem;
+            border-radius: 6px; display: none;
+            font-size: 0.95rem; border-left: 4px solid;
+        }
+        .feedback.correto {
+            display: block; background-color: var(--color-primary-light);
+            color: var(--color-success); border-left-color: var(--color-success);
+        }
+        .feedback.incorreto {
+            display: block; background-color: var(--color-error-bg);
+            color: var(--color-error); border-left-color: var(--color-error);
+        }
+
+        footer {
+            text-align: center; padding: 2rem 1rem;
+            background-color: var(--color-primary-dark);
+            color: white; margin-top: 2rem;
+        }
+        footer p { opacity: 0.9; font-size: 0.9rem; }
+
+        @media (max-width: 600px) {
+            .control-row { flex-direction: column; align-items: stretch; }
+            .value-display { text-align: left; margin-top: 0.25rem; }
+            canvas#grafico-parabola { height: 280px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Regiões ARIA Live para acessibilidade -->
+    <div id="live-status" role="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+    <div id="live-alert" role="alert" aria-live="assertive" aria-atomic="true" class="sr-only"></div>
+
+    <header role="banner">
+        <h1>Equações do 2º Grau</h1>
+        <p>Laboratório de Matemática · Álgebra · Bancada 01</p>
+    </header>
+
+    <main id="main-content" role="main">
+        
+        <!-- Seção 1: Introdução Histórica -->
+        <section id="historia" aria-labelledby="titulo-historia">
+            <h2 id="titulo-historia">Introdução Histórica e a Linguagem da Álgebra</h2>
+            <p>A necessidade de resolver problemas práticos, como a divisão de terras e o cálculo de áreas, levou os <strong>babilônios</strong> (por volta de 2000 a.C.) a desenvolverem métodos geométricos que, em essência, resolviam equações do 2º grau. Séculos depois, os <strong>matemáticos árabes</strong>, especialmente Al-Khwarizmi (século IX), unificaram esses conhecimentos, dando origem à palavra "álgebra" (do árabe <em>al-jabr</em>, que significa "restauração" ou "reunião de partes quebradas").</p>
+            <p>O uso de <strong>letras</strong> (variáveis e incógnitas) foi um salto revolucionário. Em vez de descrever cada problema com palavras longas, pudemos criar uma "fórmula universal". A letra \(x\) representa o "desconhecido" que queremos descobrir, transformando a aritmética em uma linguagem poderosa e abstrata.</p>
+        </section>
+
+        <!-- Seção 2: O Mito da Fórmula de Bhaskara -->
+        <section id="mito-bhaskara" aria-labelledby="titulo-mito">
+            <h2 id="titulo-mito">O Mito da "Fórmula de Bhaskara"</h2>
+            <p>É um fato pouco conhecido que a nomenclatura "Fórmula de Bhaskara" é usada quase que <strong>exclusivamente no Brasil</strong>. O matemático indiano Bhaskara Akaria (século XII) fez contribuições incríveis à matemática, mas não foi ele quem criou essa fórmula específica.</p>
+            <p>O método geral de resolução por meio de coeficientes e discriminante foi sistematizado pelo matemático francês <strong>François Viète</strong> (século XVI) e, antes dele, as raízes já eram calculadas pelos babilônios e por <strong>Al-Khwarizmi</strong>. Manter essa consciência histórica nos ajuda a valorizar a matemática como uma construção coletiva e global, e não como a descoberta isolada de uma única pessoa.</p>
+        </section>
+
+        <!-- Seção 3: O Guia Definitivo (Metodologia dos 3 Pilares) -->
+        <section id="guia-definitivo" aria-labelledby="titulo-guia">
+            <h2 id="titulo-guia">O Guia Definitivo: Passo a Passo</h2>
+            <p>Para resolver qualquer equação na forma \(ax^2 + bx + c = 0\), seguimos três etapas fundamentais. Use a metodologia dos 3 Pilares para dominar cada uma:</p>
+
+            <!-- Etapa 1 -->
+            <h3>Etapa 1: Identificação dos Coeficientes</h3>
+            <div class="pillars-container">
+                <div class="pillar-card">
+                    <div class="pillar-title">💡 Saber o que é</div>
+                    <p>São os "ingredientes" numéricos da equação. \(a\) multiplica o \(x^2\), \(b\) multiplica o \(x\), e \(c\) é o termo independente (sozinho).</p>
+                </div>
+                <div class="pillar-card">
+                    <div class="pillar-title">✏️ Saber como faz</div>
+                    <p>Igualar a equação a zero. Ex: \(x^2 - 5x + 6 = 0\). Logo, \(a=1\), \(b=-5\), \(c=6\). <strong>Cuidado redobrado com os sinais negativos!</strong></p>
+                </div>
+                <div class="pillar-card">
+                    <div class="pillar-title">🧠 Saber como lembrar</div>
+                    <p><strong>A</strong>lfa (o primeiro, nunca pode ser zero), <strong>B</strong>eta (o do meio), <strong>C</strong>onstante (o que está sozinho).</p>
+                </div>
+            </div>
+
+            <!-- Etapa 2 -->
+            <h3>Etapa 2: O Discriminante (Delta, \(\Delta\))</h3>
+            <div class="pillars-container">
+                <div class="pillar-card">
+                    <div class="pillar-title">💡 Saber o que é</div>
+                    <p>É o "detetive" da equação. Ele investiga quantas soluções reais a equação possui antes mesmo de calculá-las.</p>
+                </div>
+                <div class="pillar-card">
+                    <div class="pillar-title">✏️ Saber como faz</div>
+                    <p>Calcule: \(\Delta = b^2 - 4ac\).<br>
+                    Se \(\Delta > 0\): Duas raízes reais distintas.<br>
+                    Se \(\Delta = 0\): Duas raízes reais iguais (uma solução).<br>
+                    Se \(\Delta < 0\): Nenhuma raiz real.</p>
+                </div>
+                <div class="pillar-card">
+                    <div class="pillar-title">🧠 Saber como lembrar</div>
+                    <p>\(\Delta > 0\): "Abre dois braços" (2 raízes).<br>\(\Delta = 0\): "Ponto único" (1 raiz).<br>\(\Delta < 0\): "Não existe no mundo real" (sem raiz real).</p>
+                </div>
+            </div>
+
+            <!-- Etapa 3 -->
+            <h3>Etapa 3: Cálculo das Raízes</h3>
+            <div class="pillars-container">
+                <div class="pillar-card">
+                    <div class="pillar-title">💡 Saber o que é</div>
+                    <p>São os valores de \(x\) que, quando substituídos na equação original, fazem o resultado ser exatamente zero.</p>
+                </div>
+                <div class="pillar-card">
+                    <div class="pillar-title">✏️ Saber como faz</div>
+                    <div class="math-block">
+                        $$x = \frac{-b \pm \sqrt{\Delta}}{2a}$$
+                    </div>
+                    <p>Substitua \(b\), \(\Delta\) e \(a\) e calcule as duas versões: uma com \(+\) e outra com \(-\).</p>
+                </div>
+                <div class="pillar-card">
+                    <div class="pillar-title">🧠 Saber como lembrar</div>
+                    <p>"Menos \(b\), mais ou menos a raiz de Delta, tudo dividido por dois \(a\)".</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção 4: Visualizando a Equação -->
+        <section id="simulacao" aria-labelledby="titulo-simulacao">
+            <h2 id="titulo-simulacao">Visualizando a Equação (Parábola)</h2>
+            <p>Toda equação do 2º grau forma uma curva chamada <strong>parábola</strong> no plano cartesiano. As raízes que calculamos são exatamente os pontos onde a parábola <strong>corta o eixo X</strong>. Use os controles para ver como \(a\), \(b\) e \(c\) deformam o gráfico em tempo real.</p>
+            
+            <div class="sim-container">
+                <div class="sim-header">
+                    <span class="sim-badge">EXPERIÊNCIA Nº 01 · FUNÇÃO QUADRÁTICA</span>
+                    <span id="delta-display" style="font-weight: bold; color: var(--color-primary-dark);">Δ = 0</span>
+                </div>
+
+                <canvas id="grafico-parabola" aria-label="Gráfico cartesiano interativo de uma parábola. Use os controles abaixo para alterar os coeficientes a, b e c e observar como a curva e suas raízes mudam."></canvas>
+                
+                <div class="sim-controls">
+                    <div class="control-row">
+                        <div class="control-group">
+                            <label for="slider-a">Coeficiente \(a\) (Concavidade)</label>
+                            <input type="range" id="slider-a" min="-5" max="5" step="0.5" value="1" aria-valuemin="-5" aria-valuemax="5" aria-valuenow="1">
+                        </div>
+                        <div class="value-display" id="display-a">a = 1</div>
+                    </div>
+                    
+                    <div class="control-row">
+                        <div class="control-group">
+                            <label for="slider-b">Coeficiente \(b\) (Inclinação no eixo Y)</label>
+                            <input type="range" id="slider-b" min="-10" max="10" step="0.5" value="0" aria-valuemin="-10" aria-valuemax="10" aria-valuenow="0">
+                        </div>
+                        <div class="value-display" id="display-b">b = 0</div>
+                    </div>
+
+                    <div class="control-row">
+                        <div class="control-group">
+                            <label for="slider-c">Coeficiente \(c\) (Intersecção no eixo Y)</label>
+                            <input type="range" id="slider-c" min="-10" max="10" step="0.5" value="0" aria-valuemin="-10" aria-valuemax="10" aria-valuenow="0">
+                        </div>
+                        <div class="value-display" id="display-c">c = 0</div>
+                    </div>
+
+                    <div class="control-row" style="margin-top: 0.5rem; justify-content: space-between; align-items: center;">
+                        <div id="raizes-display" style="font-size: 0.95rem; color: var(--color-text-muted);">Raízes: x = 0</div>
+                        <button id="btn-reset" class="btn" aria-label="Reiniciar coeficientes para valores padrão">↺ Reiniciar</button>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.5rem;">
+                        Dica: Observe que se \(a > 0\) a "boca" da parábola aponta para cima. Se \(a < 0\), aponta para baixo.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção 5: Quiz -->
+        <section id="quiz" aria-labelledby="titulo-quiz">
+            <h2 id="titulo-quiz">Mini-Quiz de Verificação</h2>
+            <p>Teste sua compreensão. O feedback é imediato e explica o raciocínio.</p>
+            
+            <form id="quiz-form" class="quiz-container">
+                <!-- Questão 1 -->
+                <div class="quiz-item" data-tipo="mc" data-resposta="b">
+                    <fieldset>
+                        <legend>1. Na equação \(2x^2 - 8 = 0\), quais são os valores dos coeficientes \(a\), \(b\) e \(c\)?</legend>
+                        <div class="option">
+                            <input type="radio" name="q1" id="q1a" value="a">
+                            <label for="q1a">a) \(a=2, b=1, c=-8\)</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q1" id="q1b" value="b">
+                            <label for="q1b">b) \(a=2, b=0, c=-8\)</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q1" id="q1c" value="c">
+                            <label for="q1c">c) \(a=2, b=-8, c=0\)</label>
+                        </div>
+                    </fieldset>
+                    <div class="feedback" id="fb-q1"></div>
+                </div>
+
+                <!-- Questão 2 -->
+                <div class="quiz-item" data-tipo="mc" data-resposta="c">
+                    <fieldset>
+                        <legend>2. Se ao calcular o discriminante (\(\Delta\)) de uma equação o resultado for negativo (\(\Delta < 0\)), o que isso significa?</legend>
+                        <div class="option">
+                            <input type="radio" name="q2" id="q2a" value="a">
+                            <label for="q2a">a) A equação tem duas raízes reais distintas.</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q2" id="q2b" value="b">
+                            <label for="q2b">b) Houve um erro de cálculo, pois Delta nunca pode ser negativo.</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" name="q2" id="q2c" value="c">
+                            <label for="q2c">c) A equação não possui raízes reais (o gráfico não toca o eixo X).</label>
+                        </div>
+                    </fieldset>
+                    <div class="feedback" id="fb-q2"></div>
+                </div>
+
+                <!-- Questão 3 -->
+                <div class="quiz-item" data-tipo="numerica" data-resposta="2">
+                    <fieldset>
+                        <legend>3. Qual é a soma das raízes da equação \(x^2 - 5x + 6 = 0\)? (Dica: você pode usar a fórmula ou a relação de Girard: \(S = -b/a\)). Digite apenas o número.</legend>
+                        <label for="q3-input" class="sr-only">Soma das raízes</label>
+                        <input type="number" id="q3-input" name="q3" step="0.1" style="padding: 0.5rem; width: 120px; border: 1px solid var(--color-border); border-radius: 4px; font-size: 1rem;">
+                    </fieldset>
+                    <div class="feedback" id="fb-q3"></div>
+                </div>
+
+                <button type="button" id="btn-verificar" class="btn" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                    Verificar Respostas
+                </button>
+                <p id="quiz-score" style="text-align: center; margin-top: 1rem; font-weight: bold; font-size: 1.2rem; color: var(--color-primary-dark);"></p>
+            </form>
+        </section>
+
+    </main>
+
+    <footer role="contentinfo">
+        <p>Laboratório de Matemática Interativa · Equações do 2º Grau</p>
+        <p style="margin-top: 0.5rem; font-size: 0.8rem;">Construído com HTML5 semântico, CSS puro, JavaScript e KaTeX. Respeita <code>prefers-reduced-motion</code>.</p>
+    </footer>
+
+    <!-- KaTeX JS -->
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
+    <script>
+        /* =========================================================
+           Inicialização e KaTeX
+           ========================================================= */
+        document.addEventListener('DOMContentLoaded', () => {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '\\(', right: '\\)', display: false}
+                ],
+                throwOnError: false
+            });
+
+            initGraphSimulation();
+            initQuiz();
+        });
+
+        function announce(message, type = 'status') {
+            const el = document.getElementById(type === 'alert' ? 'live-alert' : 'live-status');
+            el.textContent = '';
+            setTimeout(() => { el.textContent = message; }, 100);
+        }
+
+        /* =========================================================
+           Simulação Interativa: Gráfico da Parábola
+           ========================================================= */
+        function initGraphSimulation() {
+            const canvas = document.getElementById('grafico-parabola');
+            const ctx = canvas.getContext('2d');
+            const sliderA = document.getElementById('slider-a');
+            const sliderB = document.getElementById('slider-b');
+            const sliderC = document.getElementById('slider-c');
+            const displayA = document.getElementById('display-a');
+            const displayB = document.getElementById('display-b');
+            const displayC = document.getElementById('display-c');
+            const deltaDisplay = document.getElementById('delta-display');
+            const raizesDisplay = document.getElementById('raizes-display');
+            const btnReset = document.getElementById('btn-reset');
+
+            let a = 1, b = 0, c = 0;
+
+            function resize() {
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                ctx.scale(dpr, dpr);
+                drawGraph();
+            }
+            window.addEventListener('resize', resize);
+
+            function drawGraph() {
+                const rect = canvas.getBoundingClientRect();
+                const w = rect.width;
+                const h = rect.height;
+                
+                ctx.clearRect(0, 0, w, h);
+                
+                // Sistema de coordenadas: X de -10 a 10, Y de -10 a 10
+                const range = 10;
+                const scaleX = w / (range * 2);
+                const scaleY = h / (range * 2);
+                const offsetX = w / 2;
+                const offsetY = h / 2;
+
+                const toX = (x) => offsetX + x * scaleX;
+                const toY = (y) => offsetY - y * scaleY;
+
+                // Grade
+                ctx.strokeStyle = '#dcfce7';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                for (let i = -10; i <= 10; i++) {
+                    if (i === 0) continue;
+                    ctx.moveTo(toX(i), 0); ctx.lineTo(toX(i), h);
+                    ctx.moveTo(0, toY(i)); ctx.lineTo(w, toY(i));
+                }
+                ctx.stroke();
+
+                // Eixos
+                ctx.strokeStyle = '#14532d';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, offsetY); ctx.lineTo(w, offsetY); // X
+                ctx.moveTo(offsetX, 0); ctx.lineTo(offsetX, h); // Y
+                ctx.stroke();
+
+                // Plotar Parábola: y = ax^2 + bx + c
+                ctx.strokeStyle = '#16a34a';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                let first = true;
+                for (let px = -10; px <= 10; px += 0.1) {
+                    const py = a * (px * px) + b * px + c;
+                    if (py < -12 || py > 12) { first = true; continue; } // Otimização de desenho fora da tela
+                    
+                    if (first) {
+                        ctx.moveTo(toX(px), toY(py));
+                        first = false;
+                    } else {
+                        ctx.lineTo(toX(px), toY(py));
+                    }
+                }
+                ctx.stroke();
+
+                // Calcular Delta e Raízes
+                const delta = (b * b) - (4 * a * c);
+                deltaDisplay.textContent = `Δ = ${delta.toFixed(1)}`;
+                
+                if (delta > 0) {
+                    const x1 = (-b + Math.sqrt(delta)) / (2 * a);
+                    const x2 = (-b - Math.sqrt(delta)) / (2 * a);
+                    raizesDisplay.textContent = `Raízes: x₁ ≈ ${x1.toFixed(2)}, x₂ ≈ ${x2.toFixed(2)}`;
+                    
+                    // Desenhar pontos das raízes
+                    ctx.fillStyle = '#166534';
+                    ctx.beginPath(); ctx.arc(toX(x1), toY(0), 5, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(toX(x2), toY(0), 5, 0, Math.PI*2); ctx.fill();
+                } else if (delta === 0) {
+                    const x1 = -b / (2 * a);
+                    raizesDisplay.textContent = `Raiz dupla: x ≈ ${x1.toFixed(2)}`;
+                    ctx.fillStyle = '#166534';
+                    ctx.beginPath(); ctx.arc(toX(x1), toY(0), 5, 0, Math.PI*2); ctx.fill();
+                } else {
+                    raizesDisplay.textContent = `Raízes: Nenhuma raiz real (Δ < 0)`;
+                }
+
+                // Desenhar vértice e intersecção Y (c)
+                ctx.fillStyle = '#15803d';
+                ctx.beginPath(); ctx.arc(toX(0), toY(c), 4, 0, Math.PI*2); ctx.fill(); // Ponto (0, c)
+            }
+
+            function updateValues() {
+                a = parseFloat(sliderA.value);
+                b = parseFloat(sliderB.value);
+                c = parseFloat(sliderC.value);
+                
+                // Evitar a = 0 (deixaria de ser 2º grau)
+                if (a === 0) {
+                    a = 0.5; 
+                    sliderA.value = 0.5;
+                }
+
+                displayA.textContent = `a = ${a}`;
+                displayB.textContent = `b = ${b}`;
+                displayC.textContent = `c = ${c}`;
+                
+                sliderA.setAttribute('aria-valuenow', a);
+                sliderB.setAttribute('aria-valuenow', b);
+                sliderC.setAttribute('aria-valuenow', c);
+
+                drawGraph();
+            }
+
+            sliderA.addEventListener('input', updateValues);
+            sliderB.addEventListener('input', updateValues);
+            sliderC.addEventListener('input', updateValues);
+
+            btnReset.addEventListener('click', () => {
+                sliderA.value = 1;
+                sliderB.value = 0;
+                sliderC.value = 0;
+                updateValues();
+                announce('Gráfico reiniciado para x²');
+            });
+
+            // Inicialização
+            resize();
+        }
+
+        /* =========================================================
+           Quiz Interativo
+           ========================================================= */
+        function initQuiz() {
+            document.getElementById('btn-verificar').addEventListener('click', checkQuiz);
+        }
+
+        function checkQuiz() {
+            let score = 0;
+            const perguntas = document.querySelectorAll('.quiz-item');
+            
+            perguntas.forEach((p, index) => {
+                const qNum = index + 1;
+                const tipo = p.dataset.tipo;
+                const respostaCorreta = p.dataset.resposta;
+                const feedbackEl = document.getElementById(`fb-q${qNum}`);
+                let userAnswer = '';
+                let isCorrect = false;
+
+                if (tipo === 'mc') {
+                    const selected = p.querySelector('input[type="radio"]:checked');
+                    if (selected) userAnswer = selected.value;
+                } else if (tipo === 'numerica') {
+                    const input = p.querySelector('input[type="number"]');
+                    if (input && input.value !== '') userAnswer = parseFloat(input.value);
+                }
+
+                if (tipo === 'mc' && userAnswer === respostaCorreta) {
+                    isCorrect = true;
+                } else if (tipo === 'numerica' && !isNaN(userAnswer) && Math.abs(userAnswer - parseFloat(respostaCorreta)) < 0.1) {
+                    isCorrect = true;
+                }
+
+                if (isCorrect) {
+                    score++;
+                    feedbackEl.className = 'feedback correto';
+                    feedbackEl.innerHTML = `<strong>Correto!</strong> ${getExplicacao(qNum)}`;
+                } else {
+                    feedbackEl.className = 'feedback incorreto';
+                    feedbackEl.innerHTML = `<strong>Incorreto.</strong> Dica: ${getDica(qNum)}`;
+                }
+            });
+
+            const scoreEl = document.getElementById('quiz-score');
+            scoreEl.textContent = `Você acertou ${score} de ${perguntas.length} questões.`;
+            announce(`Verificação concluída. Você acertou ${score} de ${perguntas.length} questões.`, 'alert');
+        }
+
+        function getExplicacao(q) {
+            const exp = {
+                1: "Quando um termo não aparece (como o \(x\)), seu coeficiente é zero. Portanto, \(b = 0\).",
+                2: "Matematicamente, não existe raiz quadrada de número negativo no conjunto dos números Reais. Geometricamente, a parábola fica totalmente acima ou abaixo do eixo X.",
+                3: "Pela relação de Girard, a soma das raízes é \(S = -b/a\). Aqui, \(S = -(-5)/1 = 5\). Ou calculando as raízes (2 e 3), a soma é 5."
+            };
+            return exp[q];
+        }
+
+        function getDica(q) {
+            const dicas = {
+                1: "Reescreva a equação como \(2x^2 + 0x - 8 = 0\) para visualizar todos os coeficientes.",
+                2: "Lembre-se do pilar 'Saber como lembrar': Delta negativo significa que a solução 'não existe no mundo real' (dos números reais).",
+                3: "Fatore a equação: quais dois números multiplicados dão 6 e somados dão -5? (Resposta: -2 e -3). A soma deles é o resultado."
+            };
+            return dicas[q];
+        }
+    </script>
+</body>
+</html>
