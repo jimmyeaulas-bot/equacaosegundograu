@@ -685,45 +685,46 @@
         }
 
         function checkQuiz() {
-            let score = 0;
-            const perguntas = document.querySelectorAll('.quiz-item');
-            
-            perguntas.forEach((p, index) => {
-                const qNum = index + 1;
-                const tipo = p.dataset.tipo;
-                const respostaCorreta = p.dataset.resposta;
-                const feedbackEl = document.getElementById(`fb-q${qNum}`);
-                let userAnswer = '';
-                let isCorrect = false;
+    let score = 0;
+    const perguntas = document.querySelectorAll('.quiz-item');
+    
+    perguntas.forEach((p, index) => {
+        const qNum = index + 1;
+        const tipo = p.dataset.tipo;
+        const respostaCorreta = p.dataset.resposta;
+        const feedbackEl = document.getElementById(`fb-q${qNum}`);
+        let userAnswer = '';
+        let isCorrect = false;
 
-                if (tipo === 'mc') {
-                    const selected = p.querySelector('input[type="radio"]:checked');
-                    if (selected) userAnswer = selected.value;
-                } else if (tipo === 'numerica') {
-                    const input = p.querySelector('input[type="number"]');
-                    if (input && input.value !== '') userAnswer = parseFloat(input.value);
-                }
-
-                if (tipo === 'mc' && userAnswer === respostaCorreta) {
-                    isCorrect = true;
-                } else if (tipo === 'numerica' && !isNaN(userAnswer) && Math.abs(userAnswer - parseFloat(respostaCorreta)) < 0.1) {
-                    isCorrect = true;
-                }
-
-                if (isCorrect) {
-                    score++;
-                    feedbackEl.className = 'feedback correto';
-                    feedbackEl.innerHTML = `<strong>Correto!</strong> ${getExplicacao(qNum)}`;
-                } else {
-                    feedbackEl.className = 'feedback incorreto';
-                    feedbackEl.innerHTML = `<strong>Incorreto.</strong> Dica: ${getDica(qNum)}`;
-                }
-            });
-
-            const scoreEl = document.getElementById('quiz-score');
-            scoreEl.textContent = `Você acertou ${score} de ${perguntas.length} questões.`;
-            announce(`Verificação concluída. Você acertou ${score} de ${perguntas.length} questões.`, 'alert');
+        if (tipo === 'mc') {
+            const selected = p.querySelector('input[type="radio"]:checked');
+            if (selected) userAnswer = selected.value;
+        } else if (tipo === 'numerica') {
+            const input = p.querySelector('input[type="number"]');
+            if (input && input.value !== '') userAnswer = parseFloat(input.value);
         }
+
+        // CORREÇÃO AQUI - Questão 3
+        if (tipo === 'mc' && userAnswer === respostaCorreta) {
+            isCorrect = true;
+        } else if (tipo === 'numerica' && !isNaN(userAnswer) && parseFloat(userAnswer) === parseFloat(respostaCorreta)) {
+            isCorrect = true;
+        }
+
+        if (isCorrect) {
+            score++;
+            feedbackEl.className = 'feedback correto';
+            feedbackEl.innerHTML = `<strong>Correto!</strong> ${getExplicacao(qNum)}`;
+        } else {
+            feedbackEl.className = 'feedback incorreto';
+            feedbackEl.innerHTML = `<strong>Incorreto.</strong> Dica: ${getDica(qNum)}`;
+        }
+    });
+
+    const scoreEl = document.getElementById('quiz-score');
+    scoreEl.textContent = `Você acertou ${score} de ${perguntas.length} questões.`;
+    announce(`Verificação concluída. Você acertou ${score} de ${perguntas.length} questões.`, 'alert');
+}
 
         function getExplicacao(q) {
             const exp = {
